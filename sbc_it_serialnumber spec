@@ -1,0 +1,24 @@
+create or replace PACKAGE  SBC_IT_SERIALNUMBER
+AS
+
+-- =====================================================================
+-- PROGRAM NAME  : SBC_ES_AR_VAT_SII
+-- SOURCE NAME   : SBC_ES_AR_VAT_SII.pks
+-- AUTHOR        : JAVIER RUBIO
+-- DATE CREATED  : 12-JUL-17
+-- DESCRIPTION   : This program extracts data for VAT SII SPAIN
+-- =====================================================================
+-- MODIFICATION HISTORY
+-- =====================================================================
+-- DATE        NAME              DESCRIPTION
+-- ---------------------------------------------------------------------
+-- 12-JUL-17  JAVIER RUBIO      Initial Creation
+--
+-- ---------------------------------------------------------------------
+
+
+PROCEDURE main (p_errbuf            OUT VARCHAR2,
+                p_retcode           OUT VARCHAR2,
+                p_delivery varchar2);
+
+END SBC_IT_SERIALNUMBER;
