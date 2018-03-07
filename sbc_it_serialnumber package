@@ -1,0 +1,98 @@
+create or replace PACKAGE  BODY      SBC_IT_SERIALNUMBER
+AS
+
+-- =====================================================================
+-- PROGRAM NAME  : SBC_ES_AP_VAT_SII
+-- SOURCE NAME   : SBC_ES_AP_VAT_SII.pks
+-- AUTHOR        : ORACLE CONSULTING
+-- DATE CREATED  : 01-DEC-17
+-- DESCRIPTION   : This program extracts data for VAT SII SPAIN
+-- =====================================================================
+-- MODIFICATION HISTORY
+-- =====================================================================
+-- DATE        NAME              DESCRIPTION
+-- ---------------------------------------------------------------------
+-- 01-DEC-17  ORACLE CONSULTING      Initial Creation
+-- 20-DEC-27  JAVIER RUBIO           Query by date range parameters
+-- ---------------------------------------------------------------------
+
+
+PROCEDURE main (p_errbuf            OUT VARCHAR2,
+                p_retcode           OUT VARCHAR2,
+                p_delivery varchar2)
+
+IS
+ 
+begin
+
+  DECLARE 
+    
+    v_text VARCHAR(5000);
+    
+    
+                        
+     Cursor c_sum (p_delivery wsh_delivery_details.delivery_detail_id%TYPE) is        
+                    
+                  SELECT  'DELIVERY_ID'||';'||wdd.delivery_detail_id||';'||
+                          cs.account_number||';'||
+                          pt.party_name||';'||
+                          TO_CHAR (hd.order_number)||';'||
+                          TO_CHAR (li.line_number)||';'||
+                          li.ordered_item||';'||
+                          itl.description||';'||
+                          'ship_date'||';'||
+                          ser.serial_no||';'||
+                          dicp.ctry_of_orig||';'||
+                          dicp.upc||';'||
+                          dicp.model||';'||
+                          dicp.group_code||';'||
+                          dicp.category||';'||
+                          dicp.attribute15||';'||
+                          to_number(dicp.year)
+                FROM hz_cust_accounts cs,
+                  hz_parties pt, 
+                  --sbc_bb_user_opts uopt, 
+                  mtl_system_items_b itl, 
+                  sbc_wms_serial_numbers ser, 
+                  oe_order_headers_all hd, 
+                  oe_order_lines_all li, 
+                  wsh_delivery_assignments wda, 
+                  wsh_new_deliveries wnd,
+                  wsh_delivery_details wdd, 
+                  dbwh_item_category_planning dicp 
+                  WHERE ser.serial_no LIKE upper ('WSBC') || '%' 
+                  AND ser.serial_no IS NOT NULL 
+                  AND hd.header_id = li.header_id 
+                  AND hd.sold_to_org_id = cs.cust_account_id 
+                  AND cs.party_id = pt.party_id 
+                  AND li.inventory_item_id = itl.inventory_item_id 
+                  AND li.ship_from_org_id = itl.organization_id 
+                  AND li.ship_from_org_id = ser.org_id 
+                  AND li.ordered_item = ser.item 
+                  --and uopt.user_id = fnd_global.user_id 
+                  --and uopt.language_code = itl.language 
+                  and hd.org_id = nvl(86,hd.org_id) 
+                  and wdd.source_line_id = li.line_id 
+                  and wda.delivery_detail_id = wdd.delivery_detail_id 
+                  and wnd.delivery_id = ser.delivery_id 
+                  and wnd.delivery_id = wda.delivery_id 
+                  and itl.inventory_item_id = dicp.inventory_item_id
+                  and wdd.delivery_detail_id = p_delivery;
+                  
+      
+         BEGIN 
+                OPEN c_sum (p_delivery) ;
+                LOOP
+                    FETCH c_sum INTO v_text; 
+                            EXIT  WHEN  c_sum%notfound;
+                     
+                      --fnd_file.put_line (fnd_file.log, v_text);
+                       dbms_output.put_line(v_text);
+                                            
+                END LOOP;           
+                close c_sum;
+        end;
+
+end; 
+
+END SBC_IT_SERIALNUMBER;
